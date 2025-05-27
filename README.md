@@ -1,13 +1,16 @@
-👋 Hi there, I'm @NightCodeOwl
+# 👋 Hello! I'm [Your Name]
 
-👀 I'm passionate about web development, AI, open-source projects, etc.
+💻 Backend Developer | Data Automation | Azure & Spark Enthusiast  
+🛠 I build data pipelines, write automation scripts, and clean code.
 
-🌱 Currently delving deeper into [mention a specific technology, programming language, or area of research you're learning - e.g., Python, machine learning, cloud computing, etc.]
+### 💼 Services I offer:
+- ✅ Python scripts for data & file automation
+- ✅ Azure File Share & Blob automation
+- ✅ Resume reviews & GitHub optimization
 
-💞️ Excited to collaborate on [state the type of projects or areas you're interested in collaborating on - e.g., innovative tech solutions, community-driven projects, etc.]
+### 📂 Portfolio Projects
+- **Azure File Uploader** - Upload files to Azure File Share via SDK
+- **Sitemap Processor** - Spark-based XML generator
+- **Resume Optimizer Script** - Converts raw resume into ATS-friendly format
 
-📫 Reach out to me [mention how people can contact you - e.g., via email, LinkedIn, Twitter, etc.]
-
-😄 Pronouns: [Your preferred pronouns - e.g., He/Him, She/Her, They/Them, etc.]
-
-⚡ Fun fact: [Share an interesting or quirky fact about yourself - e.g., an unusual hobby, a unique skill, or any fun personal tidbit.]
+Let’s connect or collaborate — I’d love to help.
