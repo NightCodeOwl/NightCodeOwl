@@ -73,7 +73,7 @@ graph LR
 - **Focus Areas:** Dynamic Programming, Graph Algorithms, System Design
 
 ### 📫 Connect With Me
-- 💼 [LinkedIn]([https://linkedin.com/in/deepanshu-maheshwari](https://www.linkedin.com/in/deepanshu-maheshwari-748823172/))
+- 💼 [LinkedIn](https://www.linkedin.com/in/deepanshu-maheshwari-748823172/)
 - 📧 [Email](mailto:deepanshumaheshwarri99@gmail.com)
 - 📝 [Technical Blog](https://github.com/deepanshu/technical-blog) (Coming Soon)
 
