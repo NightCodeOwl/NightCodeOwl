@@ -312,7 +312,7 @@ cd <project-directory>
 
 ## Contact
 
-- 💼 [LinkedIn]([https://linkedin.com/in/deepanshu-maheshwari](https://www.linkedin.com/in/deepanshu-maheshwari-748823172/))
+- 💼 [LinkedIn](https://www.linkedin.com/in/deepanshu-maheshwari-748823172/)
 - 📧 [deepanshumaheshwarri99@gmail.com](mailto:deepanshumaheshwarri99@gmail.com)
 - 🐙 [GitHub](https://github.com/NightCodeOwl)
 
