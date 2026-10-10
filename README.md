@@ -1,5 +1,7 @@
 # Deepanshu Maheshwari's GitHub Profile
 
+🌐 **Portfolio website:** [https://nightcodeowl.github.io/NightCodeOwl/](https://nightcodeowl.github.io/NightCodeOwl/)
+
 **Role:** Senior Software Engineer (SDE III) at Walmart Global Tech building end-to-end distributed systems for Walmart Canada's SEO platform
 
 **What I build:** Spark/Scala batch pipelines on GCP Dataproc, GraphQL serving layers with DGS BatchLoader, Kafka-based event-driven microservices, multi-tenant Cassandra schemas, and source-agnostic ETL with Strategy-pattern abstraction.
@@ -26,4 +28,6 @@ End-to-end ownership across batch pipelines, event-driven microservices, GraphQL
 
 **Competitive Programming:** 500+ LeetCode problems solved, focusing on dynamic programming and graph algorithms
 
-**Contact:** LinkedIn, email, and technical blog (coming soon) available through profile links
+**🌐 Portfolio:** [https://nightcodeowl.github.io/NightCodeOwl/](https://nightcodeowl.github.io/NightCodeOwl/)
+
+**Contact:** [LinkedIn](https://www.linkedin.com/in/deepanshuu-maheshwari/) · [deepanshuumaheshwari@gmail.com](mailto:deepanshuumaheshwari@gmail.com)
