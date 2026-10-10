@@ -1,6 +1,9 @@
 # 🦉 Production Engineering Portfolio
 
-> Generic, sanitized implementations of distributed systems, data pipelines, and infrastructure automation solutions built at enterprise scale.
+> Distributed systems, data pipelines, and infrastructure automation built at enterprise scale — described at the design-pattern level. Production code remains in private employer repositories.
+
+**Deepanshu Maheshwari** · Software Engineer III @ Walmart Global Tech · Bengaluru
+SDE I & II (Jan 2022 – Jul 2024) → SDE III (Aug 2024 – Present) · International SEO Platform
 
 [![Java](https://img.shields.io/badge/Java-Expert-ED8B00?style=flat&logo=openjdk)](/)
 [![Scala](https://img.shields.io/badge/Scala-Expert-DC322F?style=flat&logo=scala)](/)
@@ -10,7 +13,7 @@
 [![Cassandra](https://img.shields.io/badge/Cassandra-Advanced-1287B1?style=flat&logo=apachecassandra)](/)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Advanced-E10098?style=flat&logo=graphql)](/)
 [![GCP](https://img.shields.io/badge/GCP-Advanced-4285F4?style=flat&logo=googlecloud)](/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-Expert-412991?style=flat&logo=openai)](/)
+[![LLMs](https://img.shields.io/badge/LLM_Integration-Advanced-412991?style=flat&logo=openai)](/)
 
 ---
 
@@ -18,10 +21,11 @@
 
 | Metric | Value |
 |--------|-------|
+| Daily Users Served (AI-generated content) | **1M+** |
 | Daily Transactions | **10M+** |
-| Pages Processed Monthly | **2M+** |
+| URLs Validated Pre-Publish | **2M+** |
 | Items Translated (en-CA → fr-CA) | **1.28M+** |
-| RELM Records Published to Cassandra | **200M+** |
+| Interlink Records Published to Cassandra | **200M+** |
 | Weekly Keywords Processed | **500K+** |
 | Producer-Consumer Throughput Gain | **300×** |
 | System Uptime | **99.95%** |
@@ -36,258 +40,244 @@
 ### 1. 🌐 Keyword Datalake & Topic Page Generation Pipeline
 > End-to-end 7-step Spark/Scala pipeline transforming search keyword signals into production SEO pages
 
-**Problem:** Manual keyword analysis and topic-page creation was unscalable for an enterprise SEO platform. Needed an automated pipeline ingesting 500K+ keywords/week, filtering through quality validators, enriching via search APIs, deduplicating via ML, and publishing to production datastore.
+**Problem:** Manual keyword analysis and topic-page creation was unscalable for an enterprise SEO platform. Needed an automated pipeline ingesting 500K+ keywords/week, filtering through quality validators, enriching via search APIs, deduplicating via ML, and publishing to the production datastore.
 
 **Solution:**
-- **7-step Dataproc workflow**: SourceProcessor → KeywordProcessor → SearchResponseFetcher → KeywordDeDupProcessor → PageDeDupProcessor → MetaDataProcessor → TopicPageProcessor
-- **NLP enrichment** (step 1): Stanford CoreNLP 4.4.0 for lemmatization and POS tagging; OpenNLP 1.9.3 for sentence detection; heuristic media/local/info intent classification
-- **8 configurable validators** sourced from GCP Secret Manager: existing-assortment check, rank check (≤ 20), keyword intent, search volume threshold (≥ 100 MSV), intent scope, retail intent, offensive keyword filter (GCS-backed blocked list), media type
-- **ML-based deduplication** via Walmart ML Platform workflows (replaced BERT with internal model, cutting batch time 6hr → 2.4hr)
-- **External API integration**: Preso Search API enrichment via Spark `mapPartitions` batched per-partition (replaced shuffle-heavy join)
+- **7-step Dataproc workflow**: source ingestion → keyword processing → search-response enrichment → keyword dedup → page dedup → metadata → topic-page generation
+- **NLP enrichment**: Stanford CoreNLP for lemmatization and POS tagging; OpenNLP for sentence detection; heuristic media/local/info intent classification
+- **8 configurable validators** sourced from GCP Secret Manager: existing-assortment check, rank threshold, keyword intent, minimum search volume, intent scope, retail intent, offensive-keyword filter (GCS-backed blocked list), media type
+- **ML-based deduplication** via an internal ML platform (replaced BERT with an internal model, cutting batch time 6hr → 2.4hr)
+- **Search API enrichment** via Spark `mapPartitions` batched per partition (replaced a shuffle-heavy join)
 - **Cassandra publish** with composite key + LCS compaction
 - **50+ executor** auto-scaling Dataproc workflow templates
-- **Multi-competitor BrightEdge bucket parsing**: `CompetitorParser` Strategy pattern for 7 retailers (walmart_ca, amazon_ca, costco_ca, homedepot_ca, bestbuy_ca, metro_ca, instacart_ca)
+- **Multi-competitor data parsing**: Strategy-pattern parser handling feeds for 7 competitor retailers
 
-**Technologies:** Scala 2.12, Apache Spark, GCP Dataproc, Stanford CoreNLP 4.4, OpenNLP 1.9, Apache Cassandra, GCP Secret Manager, BigQuery analytics sink
+**Technologies:** Scala 2.12, Apache Spark, GCP Dataproc, Stanford CoreNLP, OpenNLP, Apache Cassandra, GCP Secret Manager, BigQuery
 
-**Impact:** Processes **500K+ keywords weekly** → **35K production-grade SEO topic pages**; ~6-hour end-to-end runtime; powers entire CA topic page production end-to-end; **60% improvement** in batch runtime from BERT migration
+**Impact:** Processes **500K+ keywords weekly** → **35K production-grade SEO topic pages**; ~6-hour end-to-end runtime; **60% improvement** in batch runtime from the BERT migration
 
 ---
 
 ### 2. 🧬 Source-Agnostic ETL Pipeline Framework
-> Modular data pipeline architecture with Strategy-pattern source abstraction and AI integration
+> Modular data pipeline architecture with Strategy-pattern source abstraction and LLM integration
 
 **Problem:** Multiple data sources (BigQuery, GCS, Hive, REST APIs) each required a different ingestion code path. New sources meant copy-paste-modify of the entire pipeline. Cross-project BigQuery moves hit DML restrictions.
 
 **Solution:**
-- **Strategy-pattern source abstraction**: `DataSourceReader` interface + `DataSourceReaderFactory` with pluggable implementations (`BigQueryReader`, `GcsReader`, future Snowflake/Kafka)
-- Source type switches via runtime config (`source.type=bigquery|gcs`); zero code changes to add new sources
-- Preserved target Cassandra schema across all input sources — downstream services unaware of source variation
-- **Cross-Project BigQuery DML pattern**: staging-table NDJSON load → same-project MERGE workaround to bypass BQ's cross-project DML restriction
-- Delta semantics via `has_processed` / `is_translated` / `retry_count` flag pattern for incremental processing
-- **AI-powered image alt text generation** — integrated OpenAI API and LangChain for SEO-optimized alt text across 100K+ product images
-- Extended downstream service schema to serve structured alt text arrays (asset ID + alt text string) via GraphQL gateway
-- Optimized batch processing with checkpoint recovery
-- Cost analysis module: GPT-4o at ~$0.0058/request, Vector DB at ~$1,096/month — used to drive build-vs-buy decisions
+- **Strategy-pattern source abstraction**: `DataSourceReader` interface + factory with pluggable implementations (BigQuery, GCS, future Snowflake/Kafka)
+- Source type switches via runtime config; zero code changes to add new sources
+- Preserved the target Cassandra schema across all input sources — downstream services unaware of source variation
+- **Cross-project BigQuery DML pattern**: staging-table NDJSON load → same-project MERGE to bypass BigQuery's cross-project DML restriction
+- Delta semantics via processed / translated / retry-count flags for incremental processing
+- **LLM-generated image alt text** — productionized LLM outputs (OpenAI API, LangChain) as SEO-optimized alt text across 100K+ product images
+- Extended the downstream schema to serve structured alt-text arrays (asset ID + text) through a federated GraphQL gateway
+- Checkpoint recovery for batch processing
+- LLM cost modeling (per-request inference vs. vector DB) to drive build-vs-buy decisions
 
-**Technologies:** Java, Apache Spark, Scala, SQL, BigQuery (cross-project DML), GCS, OpenAI API, LangChain, GraphQL
+**Technologies:** Java, Apache Spark, Scala, SQL, BigQuery, GCS, OpenAI API, LangChain, GraphQL
 
-**Impact:** Processes **100K+ products daily** with 99.9% reliability; shipped AI-generated content to production item pages achieving WCAG accessibility compliance; new sources plug in without ETL changes
+**Impact:** Processes **100K+ products daily** with 99.9% reliability; shipped AI-generated content to production item pages supporting WCAG accessibility compliance; new sources plug in without ETL changes
 
 ---
 
 ### 3. 🔄 Kafka-Based Async Translation Pipeline
-> Event-driven Spring Boot service replacing synchronous REST dependency with producer-consumer pattern
+> Event-driven Spring Boot service replacing a rate-limited synchronous REST dependency with a producer-consumer pattern
 
-**Problem:** Existing per-record REST integration with the internal translation platform was 300× too slow at scale, fragile (any downstream blip cascaded back), and locked translation throughput to translation-API latency. Needed to translate 1.28M items en-CA → fr-CA.
+**Problem:** The per-record REST integration with the internal translation platform was rate-limited, fragile (any downstream blip cascaded back), and locked throughput to translation-API latency. Needed to translate 1.28M items en-CA → fr-CA.
 
 **Solution:**
-- Spring Boot 3.2 service with 3-stage pipeline: `IngestionService` → `TranslationOrchestrator` (batches 1000 records → Kafka) → `KafkaConsumerService` (`@KafkaListener` upserts fr-CA into BigQuery)
-- TAAS Kafka with mTLS/SSL via JKS keystores loaded from GCP Secret Manager
-- Idempotent upsert handling via composite tracking flags (`has_processed` / `is_translated` / `retry_count`)
-- Cross-project BigQuery DML workaround: staging-table NDJSON load → same-project MERGE pattern to bypass BQ's cross-project DML restriction
-- Dead-letter handling with exponential backoff retry caps
+- Spring Boot 3.2 service with a 3-stage pipeline: ingestion → orchestrator (batches 1,000 records → Kafka) → `@KafkaListener` consumer upserting fr-CA output into BigQuery
+- Managed Kafka with mTLS, keystores loaded from GCP Secret Manager
+- Idempotent upserts via composite tracking flags, so retries and replays are safe
+- Cross-project BigQuery DML workaround: staging-table NDJSON load → same-project MERGE
+- Dead-letter handling with capped exponential-backoff retries
 - Decoupled scaling: producer and consumer scale independently; translation latency no longer blocks the producer
 
-**Technologies:** Java 17, Spring Boot 3.2, Apache Kafka (TAAS, mTLS), Google BigQuery, GCP Secret Manager, GCP Dataproc
+**Technologies:** Java 17, Spring Boot 3.2, Apache Kafka (mTLS), Google BigQuery, GCP Secret Manager, GCP Dataproc
 
-**Impact:** **300× throughput improvement** over per-record baseline; **1.28M items translated** en-CA → fr-CA in ~5–6 hours total; eliminated synchronous downstream coupling — enables future multi-language extensibility (es-MX, etc.) without service changes
+**Impact:** **300× throughput improvement** over the per-record baseline; **1.28M items translated** en-CA → fr-CA in ~5–6 hours of processing; eliminated synchronous downstream coupling and enabled future languages without service changes
 
 ---
 
 ### 4. 🔗 200M+ Record Interlinking Publisher
-> Distributed Cassandra publisher for ML-generated internal-link recommendations at enterprise scale
+> Distributed Cassandra publisher for ML-generated internal-link recommendations
 
-**Problem:** Millions of web pages with no programmatic interlinking — manual link curation was unscalable. The ML team produces 200M+ recommendation records per refresh that need to land in production Cassandra without OOMs or schema mismatches.
+**Problem:** Millions of web pages had no programmatic interlinking. The ML team produces 200M+ recommendation records per refresh that must land in production Cassandra without OOMs or schema mismatches.
 
 **Solution:**
-- **Scale**: Publisher (Scala 2.12, Spark 3.4.3, spark-cassandra-connector 3.4.1) handles 200M+ records per run
-- **Schema split**: 3 distinct Cassandra schemas covering 5 page types — `BrowseCpSchema` (browse/category: `{id, banner, pageType, locale}`), `ItemSchema` (product: `{id, locale}`), `TopicBrandSchema` (topic/brand: `id` string)
-- **OOM prevention**: Sequential file processing for product pages (the 200M+ tier) instead of full-set in-memory aggregation
-- **Batch writes**: 100K-record chunks tuned for Cassandra coordinator pressure
-- **Auto-date detection**: Latest GCS date folder picked up automatically — no manual config per run
-- **3P brand exclusion filter**: rule-based interlink quality control
-- **Polling trigger**: polling-based refresh mechanism deployed first; event-driven Cloud Functions trigger scoped for next iteration
-- Cross-service implementation across shared commons and domain-specific services
+- **Scale**: Scala/Spark 3.4 publisher with spark-cassandra-connector handling 200M+ records per run
+- **Schema split**: 3 Cassandra schemas covering 5 page types (browse/category, product, topic/brand)
+- **OOM prevention**: sequential file processing for the 200M+ product tier instead of full in-memory aggregation, with bounded in-flight writes
+- **Batch writes**: 100K-record chunks tuned for coordinator pressure
+- **Auto-date detection**: latest GCS date folder picked up automatically
+- **Third-party brand exclusion filter** for interlink quality
+- **Refresh trigger**: polling-based trigger shipped first; event-driven trigger scoped as the next iteration
 
-**Technologies:** Scala 2.12, Apache Spark 3.4.3, Apache Cassandra 4.x, GCS, spark-cassandra-connector 3.4.1
+**Technologies:** Scala 2.12, Apache Spark 3.4, Apache Cassandra 4.x, GCS, spark-cassandra-connector
 
-**Impact:** Deployed interlinking across browse, category, product, topic, and brand pages in production; powers production internal-link graph at enterprise scale; sequential processing on product tier eliminates OOM at 200M+ scale
+**Impact:** Interlinking live across browse, category, product, topic and brand pages; sequential processing eliminated OOMs at 200M+ scale
 
 ---
 
 ### 5. 🚦 GraphQL Serving with DGS BatchLoader
-> Coalescing N-to-1 read pattern for federated GraphQL with multi-tenant Cassandra backing
+> Coalescing N-to-1 read pattern for federated GraphQL over multi-tenant Cassandra
 
-**Problem:** GraphQL endpoints serving interlink recommendations on browse/category/product/topic/brand pages were doing N independent Cassandra reads per request, blowing past p99 latency SLO under peak QPS.
+**Problem:** GraphQL endpoints serving interlink recommendations made N independent Cassandra reads per request, breaching the p99 latency SLO at peak QPS.
 
 **Solution:**
-- Authored a `DataFetcher<CompletionStage<T>>` + `BatchLoader<KeyType, ValueType>` pair using Netflix DGS framework
-- Custom key type carrying `requestId`, market-specific params, and `GraphQLRequestMetadata` — enables tracing across the batch
-- BatchLoader coalesces all per-record lookups within a single GraphQL request into a single batched Cassandra query
-- **JVM heap tuned (4Gi → 8Gi)** to absorb in-memory payloads per request
-- Probe timeouts, istio CPU (100m → 70m), and HPA targets retuned to handle new request shape
-- Staged CPU rollout (120m → 200m → 1300m → 2300m) on downstream serving tier as traffic ramped
-- Federated mGQL gateway schema delta submitted to expose new fields without breaking existing consumers
-- Confluence runbook authored covering schema, BatchLoader caching semantics, failure modes, and on-call playbook
+- `DataFetcher<CompletionStage<T>>` + `BatchLoader` pair on Netflix DGS, with concurrent partition-local fan-out
+- Custom key type carrying request ID, market parameters and request metadata for tracing across the batch
+- All per-record lookups in a request coalesced into batched Cassandra reads
+- **Production OOMKill root cause**: heap-dump and GC analysis showed payload growth, not a memory leak; fixed by tuning JVM heap (4Gi → 8Gi), container limits, probes and autoscaling
+- Staged CPU rollout on the serving tier as traffic ramped
+- Federated gateway schema change exposed new fields without breaking existing consumers
+- Runbook covering schema, BatchLoader caching semantics, failure modes and on-call playbook
 
-**Technologies:** Java 17, Spring Boot, Netflix DGS, GraphQL, Apache Cassandra, mGQL Federation, Istio, Kubernetes
+**Technologies:** Java 17, Spring Boot, Netflix DGS, GraphQL Federation, Apache Cassandra, Istio, Kubernetes
 
-**Impact:** Cut Cassandra read amplification by orders of magnitude per GraphQL request; **p99 latency under SLO at 2× peak QPS** validated via load test; deployed across 5 page types serving 1M+ daily SEO visitors
+**Impact:** Cut Cassandra read amplification per request by orders of magnitude; **p99 within SLO at 2× peak QPS** validated by load test; serving 5 page types to 1M+ daily users
 
 ---
 
 ### 6. 💾 Multi-Tenant Cassandra Schema & Bulk Loader
-> High-performance write layer with composite-key schema design for multi-tenant data serving
+> High-performance write layer with composite-key schema design for multi-tenant serving
 
-**Problem:** Production Cassandra cluster hit write bottlenecks under peak load of 10M daily transactions causing data loss incidents. Additionally, V1 schema couldn't support per-locale rows across tenants without secondary indexes.
+**Problem:** The production Cassandra write path hit bottlenecks at a peak of 10M daily transactions, causing data-loss incidents. The V1 schema couldn't support per-locale rows across tenants without secondary indexes.
 
 **Solution:**
 
 **Schema Design:**
-- Composite partition key `(key, locale, tenant_id)` — all three participate in partition key
-- Routes by item but keeps locales co-resident for read efficiency
-- Enables any-tenant/any-locale slice without secondary indexes
-- LCS compaction tuned for read-heavy workload
-- `@Counted`/`@Timed`/`@ExceptionCounted` metrics annotations for observability
+- Composite partition key `(key, locale, tenant_id)` for single-partition lookups — no secondary indexes or scatter-gather
+- Any-tenant / any-locale slices served from one table
+- LCS compaction tuned for a read-heavy workload
+- Metrics annotations (`@Counted`, `@Timed`, `@ExceptionCounted`) with Dynatrace dashboards
 
 **Bulk Loader:**
-- Connection pooling with smart lifecycle management
-- Prepared statement caching achieving 90% hit rate
-- Multiple write strategies: batch inserts (100-record chunks), async writes
-- Retry logic with exponential backoff and dead-letter queuing
-- Time-series optimization for temporal data patterns
-- `ALLOW FILTERING` query anti-pattern detection and resolution
-- Backup table auditing and cleanup automation
+- Diagnosed the write bottleneck as **client-side overhead**, not cluster capacity
+- Prepared-statement reuse (~90% cache hit rate), batch-size tuning and connection-pool reconfiguration
+- Batch inserts and async writes; retries with exponential backoff and dead-letter queuing
+- `ALLOW FILTERING` anti-pattern detection and removal
+- Backup-table auditing and cleanup automation
 
-**Technologies:** Java, Apache Cassandra 4.x, Connection Pooling, LCS Compaction, Dynatrace observability
+**Technologies:** Java, Apache Cassandra 4.x, Connection Pooling, LCS Compaction, Dynatrace
 
-**Impact:** Improved write performance by **45%**, eliminated data loss incidents entirely; freed **~2TB** of unused storage in production; achieved **<100ms page load times** for 1M+ daily visitors; new tenant onboarding via config change, not schema change
+**Impact:** **45% write throughput improvement**; eliminated data-loss incidents; freed **~2TB** of unused production storage; **<100ms page loads** for 1M+ daily visitors; new tenants onboard via config, not schema change
 
 ---
 
-### 7. 🔄 Data Validation Framework
-> Scalable, configurable data quality checks for high-volume ETL pipelines
+### 7. ✅ Data Validation & Pre-Publish URL Validation
+> Configurable data-quality checks and fault-tolerant URL validation for high-volume pipelines
 
-**Problem:** Raw data ingestion at 500K+ records/week required multi-stage validation with zero tolerance for bad data reaching production.
+**Problem:** Ingestion at 500K+ records/week needed multi-stage validation with zero tolerance for bad data reaching production, and 2M+ URLs had to be verified before publishing.
 
 **Solution:**
-- Parallel validation processing across configurable worker threads
-- 15+ validation types: required fields, regex patterns, SQL injection detection, profanity filtering, search volume thresholds, assortment checks
-- Pluggable filter architecture — add new validators without touching core pipeline
-- Real-time monitoring and error reporting with BigQuery audit logging
+- Parallel validation across configurable worker threads
+- 15+ validation types: required fields, regex, SQL-injection detection, profanity filtering (ML-based), search-volume thresholds, assortment checks
+- Pluggable validator architecture — new checks without touching the core pipeline
+- **Pre-publish URL validation for 2M+ URLs**: probes behind a **circuit breaker** to protect downstream services
+- BigQuery audit logging, automated remediation and Slack on-call alerting
 
-**Technologies:** Python, Threading, Data Quality Patterns, BigQuery
+**Technologies:** Python, Java, Threading, Circuit Breaker, BigQuery, Slack alerting
 
-**Impact:** Processes 500K+ records weekly narrowing down to ~50K high-value targets with 99% accuracy
+**Impact:** 500K+ records weekly narrowed to ~50K high-value targets at 99% accuracy; 2M+ URLs validated before publish
 
 ---
 
 ### 8. ⚡ Spark Optimization Toolkit
-> Performance tuning toolkit for large-scale Spark job optimization
+> Performance tuning for large-scale Spark jobs
 
-**Problem:** Spark jobs processing 500K+ records hit performance bottlenecks — 6-hour batch processing times and resource inefficiency on cloud clusters.
+**Problem:** Spark jobs over 500K+ records hit 6-hour batch times and inefficient cluster usage.
 
 **Solution:**
-- Query plan analysis and cost-based optimization
+- Query-plan analysis and cost-based optimization
 - Dynamic partition tuning for data-aware parallelism
-- Data skew handling via salting and adaptive query execution
-- Broadcast join optimization for small-table joins
-- Cache management strategies with eviction policies
-- GCP Dataproc workflow template integration with auto-scaling
+- Skew handling via salting and adaptive query execution
+- Broadcast joins for small-table joins
+- Cache management strategies
+- Dataproc workflow templates with autoscaling
 
-**Technologies:** PySpark, Scala, GCP Dataproc, Performance Tuning
+**Technologies:** PySpark, Scala, GCP Dataproc
 
-**Impact:** Achieved **60% performance improvement** (6 hours → 2.4 hours); auto-scaling saved **$30K/month** in compute costs
+**Impact:** **60% faster** (6h → 2.4h); autoscaling saved **$30K/month** in compute
 
 ---
 
 ### 9. 📊 Monitoring & Alerting System
-> Real-time observability across 15+ critical production services
+> Real-time observability across 15+ production services
 
-**Problem:** Distributed services across multiple environments (US, CA) needed unified monitoring with instant incident response.
+**Problem:** Services across multiple markets (US, CA) needed unified monitoring with fast incident response.
 
 **Solution:**
-- Real-time metrics collection and aggregation across distributed services
-- Intelligent alert deduplication to reduce noise
-- Multi-channel notifications (Slack, Email, PagerDuty)
-- SLA tracking with uptime reporting
-- Anomaly detection for proactive issue identification
-- OpenObserve integration for centralized log querying
+- Metrics collection and aggregation across distributed services
+- Alert deduplication to reduce noise
+- Multi-channel notifications (Slack, email, PagerDuty)
+- SLA tracking with uptime reporting and anomaly detection
+- Centralized log querying with OpenObserve
 
-**Technologies:** Python, Prometheus patterns, Time-series analysis, OpenObserve
+**Technologies:** Python, Prometheus, Grafana, Dynatrace, OpenObserve
 
-**Impact:** Reduced incident response time by **85%** (30 min → 5 min); contributed to maintaining 99.95% uptime across production fleet
+**Impact:** Incident response cut **85%** (30 min → 5 min); contributed to **99.95% uptime**
 
 ---
 
 ### 10. 🚀 CI/CD Automation Suite
-> Multi-stage deployment pipeline with zero-downtime release strategies
+> Multi-stage deployment pipelines with zero-downtime releases
 
-**Problem:** Manual deployments took 4 hours, caused 15% error rate, and couldn't support the velocity of 7+ production services shipping features weekly.
+**Problem:** Manual deployments took 4 hours with a 15% error rate, too slow for 7+ services shipping weekly.
 
 **Solution:**
-- Multi-stage pipeline orchestration (build → test → security scan → deploy → validate)
-- Blue-green and canary deployment strategies
-- Automated testing gates with unit + integration coverage checks
-- Security scanning integration (Apiiro, CodeGate)
-- Health checks and validation gates at every stage
-- Automatic rollback on failure with state preservation
-- Slack notifications for pass/fail with deployment metadata
-- **Auto-CRQ generation tooling** for Kitt.yaml deployments — eliminated boilerplate from routine production releases
+- Pipeline orchestration: build → test → security scan → deploy → validate
+- Blue-green and canary deployments with automatic rollback
+- Automated test gates with coverage checks
+- Integrated SAST / security scanning
+- **Expand-and-contract schema changes** for rollback-safe releases
+- Slack pass/fail notifications with deployment metadata
+- Auto-generated change-request tooling for routine production releases
 
-**Technologies:** Java, Bash, Docker, Kubernetes, GitHub Actions, Looper, Concord
+**Technologies:** Java, Bash, Docker, Kubernetes, GitHub Actions, enterprise CI/CD platforms
 
-**Impact:** **75% reduction** in deployment time (4h → 1h); **100% elimination** of manual deployment errors
+**Impact:** **75% faster** deployments (4h → 1h); **manual deployment errors eliminated**
 
-**🏆 Recognition:** Q2 2025 Bravo Award Winner
+**🏆 Recognition:** Q2 2025 Bravo Award
 
 ---
 
 ### 11. 🌅 Sunset Automation System
-> Intelligent page lifecycle management with automated health-check-driven retirement
+> Health-check-driven page lifecycle management
 
-**Problem:** Thousands of stale, redirected, or zero-traffic pages degraded site quality and consumed crawl budget — manual identification was impossible at scale.
+**Problem:** Thousands of stale, redirected or zero-traffic pages degraded site quality and wasted crawl budget.
 
 **Solution:**
-- Automated URL health check pipeline: **302/404 detection**, redirect chain validation, assortment checks
-- Database schema for sunset candidates: URL, date flagged, `isRedirection`, `isLowAssortment`, `isZeroClicks`
-- BigQuery output layer for analytics team pickup
-- Sitemap auto-removal of bad URLs with audit logging
-- Rate-limited sunset execution to avoid downstream service overload
-- Sunset lifecycle: flag → validate → business approval (301 redirect) → sitemap removal → database cleanup
+- URL health-check pipeline: 302/404 detection, redirect-chain validation, assortment checks
+- Sunset-candidate tracking: date flagged, redirection, low assortment, zero clicks
+- BigQuery output for analytics pickup
+- Automatic sitemap removal with audit logging
+- Rate-limited execution to protect downstream services
+- Lifecycle: flag → validate → business approval (301) → sitemap removal → cleanup
 
-**Technologies:** Java, BigQuery, Cassandra, Health Check Patterns
+**Technologies:** Java, BigQuery, Cassandra
 
-**Impact:** Auto-removes **2,000+ stale URLs monthly**; recovered **15% of lost organic traffic** through duplicate page consolidation (301 redirects for 5,000+ pages)
+**Impact:** **2,000+ stale URLs** removed monthly; recovered **15% of lost organic traffic** by consolidating 5,000+ duplicate pages via 301s
 
 ---
 
-### 12. 🔒 Zero-Downtime JDK Migration Framework
-> Systematic approach to migrating distributed Java services across major JDK versions
+### 12. 🔒 Zero-Downtime JDK Migration & Security Hardening
+> Migrating distributed Java services across major JDK versions and clearing security findings
 
-**Problem:** 7 production services running on JDK 8 with accumulating security vulnerabilities — needed migration to JDK 17 with zero customer impact.
+**Problem:** 7 production services ran on JDK 8 with accumulating vulnerabilities; the platform repo carried open SAST findings.
 
 **Solution:**
-- Service-by-service migration strategy with dependency graph analysis
-- Automated compatibility scanning for deprecated APIs and removed modules
-- Security vulnerability remediation (Apiiro-flagged CVEs) as part of migration
-- CI/CD pipeline validation at each migration stage (CodeGate integration)
-- Staged rollout: non-prod → canary → prod with automated rollback triggers
-- Post-migration validation: log monitoring, error rate comparison, performance benchmarking
+- Service-by-service migration **sequenced by blast radius** using dependency-graph analysis
+- Automated scanning for deprecated APIs and removed modules
+- Staged rollout: non-prod → **canary bake** → rolling prod deploys with automated rollback triggers
+- Post-migration validation: logs, error-rate comparison, performance benchmarks
+- **Cleared SAST findings across the platform repo**: command injection, SQL injection, log sanitization, untrusted deserialization
 
-**Services Migrated:**
-1. RELM Data Publisher
-2. Topic Page Generation
-3. FTP Page Generation
-4. SEO Page Performance
-5. Metadata Service
-6. IPSUM Service
-7. Data Ingestion Service
+**Services migrated:** 7 services spanning data publishing, page generation, page-performance analytics, metadata and data ingestion
 
-**Technologies:** Java (JDK 8 → 17), Apiiro, CodeGate, CI/CD
+**Technologies:** Java (JDK 8 → 17), SAST tooling, CI/CD
 
-**Impact:** **7 services migrated with zero downtime**; all security vulnerabilities remediated; no production incidents during or after migration
+**Impact:** **7 services migrated with zero downtime** and no production incidents; security findings remediated
 
 ---
 
@@ -295,14 +285,15 @@
 
 | Metric | Before | After | Improvement |
 |--------|--------|-------|-------------|
-| Translation Throughput | Per-record REST | Batched Kafka (1000/batch) | **300× improvement** |
+| Translation Throughput | Per-record REST | Batched Kafka (1,000/batch) | **300×** |
+| GraphQL Read Amplification | N reads per request | Batched reads | **N-to-1 coalescing** |
+| p99 Latency at 2× Peak | Breaching SLO | Within SLO | **SLO held** |
 | Deployment Time | 4 hours | 1 hour | **75% reduction** |
 | Incident Response | 30 minutes | 5 minutes | **85% reduction** |
 | Batch Processing | 6 hours | 2.4 hours | **60% reduction** |
-| Write Performance | Baseline | Optimized | **45% improvement** |
-| GraphQL Read Amplification | N reads per request | 1 batched read | **N-to-1 coalescing** |
+| Write Throughput | Baseline | Optimized | **45% improvement** |
 | System Uptime | 99% | 99.95% | **10× fewer incidents** |
-| Manual Errors | 15% | 0% | **100% elimination** |
+| Manual Deploy Errors | 15% | 0% | **Eliminated** |
 | Page Load Time | Variable | <100ms | **Consistent sub-100ms** |
 | Storage Waste | ~2TB unused | 0 | **2TB freed** |
 | Monthly Compute Cost | Baseline | Optimized | **$30K/month saved** |
@@ -314,49 +305,48 @@
 
 ### Scalability
 - Horizontal scaling with distributed processing (50+ Spark executors)
-- Producer-consumer Kafka pipelines decoupling write throughput from downstream latency
-- BatchLoader-coalesced reads on GraphQL serving layer (N-to-1 per request)
-- Sequential file processing for 200M+ record Cassandra writes (OOM avoidance)
-- Connection pooling and prepared statement caching for write paths
-- Strategy-pattern source abstraction enabling new data sources without code change
-- Auto-scaling cloud clusters based on workload
+- Kafka producer-consumer pipelines decoupling throughput from downstream latency
+- BatchLoader-coalesced reads with partition-local fan-out on the GraphQL layer
+- Sequential processing with bounded in-flight writes for 200M+ record Cassandra loads
+- Connection pooling and prepared-statement reuse on write paths
+- Strategy-pattern source abstraction for new data sources without code changes
+- Autoscaling clusters and pods based on workload
 
 ### Reliability
-- Circuit breakers for failure isolation across services
-- Retry mechanisms with exponential backoff
-- Dead-letter queue patterns for unrecoverable failures
+- Circuit breakers for failure isolation
+- Retries with exponential backoff and dead-letter queues
+- Idempotent upserts with composite tracking flags
+- Adaptive throttling to protect downstream services
+- Checkpoint-based pipeline recovery
 - Health checks and validation gates at every deployment stage
-- Checkpoint management for pipeline recovery
-- Idempotent upsert semantics with composite tracking flags (`has_processed`/`is_translated`/`retry_count`)
-- Zero-downtime migration strategies (canary, blue-green, rollback)
+- Zero-downtime strategies: canary, blue-green, expand-and-contract, automated rollback
 
 ### Performance
-- Prepared statement caching (90% hit rate)
-- Query plan analysis and cost-based optimization
 - Multi-tenant composite partition keys avoiding secondary indexes
 - LCS compaction tuned for read-heavy Cassandra workloads
+- Prepared-statement caching (~90% hit rate)
+- Query-plan analysis and cost-based optimization in Spark
 - Cross-project BigQuery DML via staging-table NDJSON + same-project MERGE
-- JVM heap tuning under in-memory payload pressure
-- Rate limiting to protect downstream services
+- JVM heap and container tuning driven by heap-dump/GC analysis
 - Proactive storage auditing and cleanup
 
 ---
 
 ## Key Learnings
 
-> "Building systems that handle millions of transactions requires thinking differently about every line of code. Connection pooling alone reduced overhead by 80%."
+> "Not every OOMKill is a leak. Heap dumps showed our memory was growing with payload size — the fix was capacity and limits, not a code hunt."
 
-> "Every manual step is a potential failure point. CI/CD automation eliminated manual errors entirely while reducing deployment time by 75%."
+> "Most 'database is slow' problems I've seen were client-side: statement preparation, batch sizing and pool configuration. Measure before you scale the cluster."
 
-> "You can't improve what you don't measure. Comprehensive monitoring reduced incident response time from 30 minutes to 5 minutes."
+> "Replacing a synchronous REST call with a Kafka producer-consumer pair is one of the highest-leverage changes in a backend system. The producer stopped blocking on downstream latency, and throughput went up 300×."
 
-> "Sometimes a 10-line configuration change can improve performance by 60%. Understanding your tools deeply is crucial."
+> "Idempotency is what makes event-driven systems safe to operate. If every message can be replayed without side effects, retries stop being scary."
 
-> "Zero-downtime migrations aren't about being careful — they're about having automated rollback, staged rollouts, and knowing your dependency graph cold."
+> "The right composite partition key is worth more than any read optimization. `(key, locale, tenant_id)` let one table serve any tenant or locale slice without secondary indexes."
 
-> "Replacing a synchronous REST call with a Kafka producer-consumer pair is one of the highest-leverage architectural changes in a backend system. We saw 300× throughput because the producer no longer blocked on downstream latency."
+> "Zero-downtime migrations aren't about being careful — they're about automated rollback, staged rollouts, and knowing your dependency graph cold."
 
-> "Designing the right composite partition key is worth more than any amount of read optimization. We picked `(key, locale, tenant_id)` because it lets a single table serve any tenant or any locale slice without secondary indexes."
+> "Every manual step is a failure point. Automating deployments cut release time by 75% and removed manual errors entirely."
 
 ---
 
@@ -365,60 +355,42 @@
 | Category | Technologies | Proficiency |
 |----------|-------------|-------------|
 | **Languages** | Java 17, Scala 2.12, Python, SQL, Bash | Expert |
-| **Backend Frameworks** | Spring Boot 3.2, Netflix DGS (GraphQL), Kafka client libraries | Expert |
-| **AI/ML** | OpenAI API, LangChain, BERT, Hugging Face, Stanford CoreNLP, OpenNLP | Expert |
-| **Big Data** | Apache Spark, Hive, Dataproc, Airflow | Expert |
-| **Streaming** | Apache Kafka (TAAS, mTLS, SSL/JKS), Producer-Consumer Patterns | Expert |
-| **Databases** | Apache Cassandra (composite-key schema, LCS compaction), BigQuery (cross-project DML), PostgreSQL, Azure Cosmos DB | Advanced |
-| **Cloud** | GCP (Dataproc, BigQuery, GCS, Secret Manager), Azure (Cosmos DB, Blob, DF Cassandra) | Advanced |
-| **Infrastructure** | Docker, Kubernetes/WCNP, Istio, CI/CD, GitHub Actions, Looper, Concord | Expert |
-| **APIs** | REST, GraphQL (DGS DataFetcher / BatchLoader / Federated mGQL), Service Integration | Expert |
-| **Monitoring** | Prometheus, Grafana, OpenObserve, Dynatrace, Apiiro | Advanced |
-
----
-
-## How to Use This Portfolio
-
-Each project directory includes:
-1. **Complete source code** with inline documentation
-2. **Example usage** and runnable demonstrations
-3. **Performance metrics** and optimization notes
-4. **Production considerations** and best practices
-
-```bash
-git clone https://github.com/NightCodeOwl/NightCodeOwl.git
-cd <project-directory>
-# Follow the README in each project folder
-```
+| **Backend Frameworks** | Spring Boot 3.2, Netflix DGS (GraphQL), Kafka clients | Expert |
+| **Streaming** | Apache Kafka (mTLS), producer-consumer patterns | Expert |
+| **Big Data** | Apache Spark, GCP Dataproc, Hive, Trino, Airflow | Expert |
+| **Databases** | Apache Cassandra (composite-key design, LCS), BigQuery, PostgreSQL, Azure Cosmos DB | Advanced |
+| **APIs** | REST, GraphQL (DataFetcher / BatchLoader / Federation) | Expert |
+| **Cloud** | GCP (Dataproc, BigQuery, GCS, Secret Manager), Azure (Cosmos DB, Blob) | Advanced |
+| **Infrastructure** | Docker, Kubernetes, Istio, CI/CD, GitHub Actions | Advanced |
+| **AI/ML** | LLM productionization (Claude, GPT-4o, Gemini), OpenAI API, LangChain, BERT, Hugging Face, Stanford CoreNLP, OpenNLP | Advanced |
+| **Monitoring** | Prometheus, Grafana, Dynatrace, OpenObserve | Advanced |
 
 ---
 
 ## What This Demonstrates
 
-✅ **Production-Grade Engineering** — Built with reliability, error handling, and monitoring from day one
+✅ **Production-grade engineering** — reliability, error handling and observability from day one
 
-✅ **Scale** — Designed to handle 200M+ records, 10M+ daily transactions, and 1M+ daily users
+✅ **Scale** — 200M+ record loads, 10M+ daily transactions, 1M+ daily users
 
-✅ **Performance** — Every system optimized for speed and resource efficiency (300× throughput on Kafka pipeline, N-to-1 read coalescing on GraphQL, 45% write throughput on Cassandra)
+✅ **Performance** — 300× throughput on Kafka, N-to-1 read coalescing on GraphQL, 45% write throughput on Cassandra
 
-✅ **AI Integration** — LLM pipelines (Claude, GPT-4o, Gemini, BERT, LangChain) shipping to production at enterprise scale
+✅ **Production debugging** — root-causing OOMKills and write bottlenecks from heap dumps, GC logs and client metrics
 
-✅ **Distributed Systems Depth** — Composite-key schema design, BatchLoader coalescing, Strategy-pattern source abstraction, cross-project BigQuery DML, mTLS Kafka producer-consumer
+✅ **AI integration** — LLM outputs (Claude, GPT-4o, Gemini) shipped to production at enterprise scale
 
-✅ **Security** — Vulnerability remediation, zero-downtime migrations, and compliance automation
+✅ **Security** — SAST remediation and zero-downtime migrations
 
-✅ **Business Impact** — $550K+ in annual savings, $2M+ in business value generated
+✅ **Business impact** — $550K+ annual savings, $2M+ in organic traffic value
 
 ---
 
 ## Contact
 
-- 💼 [LinkedIn](https://www.linkedin.com/in/deepanshu-maheshwari-748823172/)
+- 💼 [LinkedIn](https://www.linkedin.com/in/deepanshuu-maheshwari/)
 - 📧 [deepanshumaheshwarri99@gmail.com](mailto:deepanshumaheshwarri99@gmail.com)
 - 🐙 [GitHub](https://github.com/NightCodeOwl)
 
 ---
 
-> *All code in this portfolio is original work created for demonstration purposes. It represents simplified, generic versions of solutions implemented in production environments. No proprietary code, data, or business logic from any employer is included.*
-
-*"The best code is not just functional — it's scalable, maintainable, and delivers real business value."*
+> *This portfolio describes systems at the architecture and design-pattern level. No proprietary code, data, internal system names or confidential business logic from any employer is included.*
