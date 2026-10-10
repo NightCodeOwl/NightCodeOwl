@@ -188,7 +188,7 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
   <header class="hero">
     <div class="label rise"><span class="dot" aria-hidden="true"></span>SDE III · Walmart Global Tech · Bengaluru</div>
     <h1 class="rise r2">Deepanshu Maheshwari<br><span class="soft">builds the pipes data runs through.</span></h1>
-    <p class="thesis rise r3">Backend and data engineer working on distributed systems at scale: <b>Kafka pipelines</b>, <b>Spark batch engines</b>, <b>Cassandra stores</b> and <b>GraphQL APIs</b> that serve AI-generated content to over a million people a day.</p>
+    <p class="thesis rise r3">Backend and data engineer working on distributed systems at scale: <b>Kafka pipelines</b>, <b>Spark batch engines</b>, <b>Cassandra stores</b> and <b>GraphQL APIs</b> that deliver AI-generated content to Walmart's Canada and Mexico item pages.</p>
 
     <div class="stream rise r4" aria-label="Animated illustration of messages flowing from a producer through four Kafka partitions to a consumer">
       <div class="stream-head"><span>topic: catalog-translations</span><span>4 partitions · idempotent consumer</span></div>
@@ -202,10 +202,10 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
   </header>
 
   <div class="metrics" role="list">
-    <div class="metric" role="listitem"><strong>1M+</strong><span>daily users served AI-generated content</span></div>
-    <div class="metric" role="listitem"><strong>300×</strong><span>throughput after moving REST to Kafka</span></div>
+    <div class="metric" role="listitem"><strong>1.28M</strong><span>catalog items translated over async Kafka</span></div>
     <div class="metric" role="listitem"><strong>200M+</strong><span>records per Cassandra publish run</span></div>
-    <div class="metric" role="listitem"><strong>10M+</strong><span>daily transactions on the write path</span></div>
+    <div class="metric" role="listitem"><strong>199,917</strong><span>publishable pages restored from a 4.1M-record pipeline</span></div>
+    <div class="metric" role="listitem"><strong>3 → 1</strong><span>market pipelines unified into one config-driven job</span></div>
     <div class="metric" role="listitem"><strong>7</strong><span>services moved JDK 8 → 17, zero downtime</span></div>
   </div>
 
@@ -214,57 +214,84 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
     <h2>Selected systems, newest first</h2>
     <div class="log">
       <article class="entry">
-        <div class="offset"><b>offset 0006</b>SDE III</div>
+        <div class="offset"><b>offset 0009</b>SDE III</div>
+        <div>
+          <h3>Zero-downtime Kafka identity migration</h3>
+          <p>A production Kafka service authenticated with certificate-based mTLS. I moved it to SPIFFE Workload Identity in three reversible phases (prep, enablement, cleanup), coordinating Kafka permissions with the platform team and tuning Istio mTLS and per-environment egress along the way.</p>
+          <p class="result">Cut over with zero downtime; every phase could be rolled back on its own.</p>
+          <div class="tags"><span>Kafka</span><span>SPIFFE</span><span>Istio</span><span>Kubernetes</span></div>
+        </div>
+      </article>
+      <article class="entry">
+        <div class="offset"><b>offset 0008</b>SDE III</div>
+        <div>
+          <h3>One pipeline for three markets</h3>
+          <p>Canada, Mexico and the US each had their own alt-text code path. As sole owner of the epic, I wrote the design and success criteria, replaced all three with one config-driven Spark job, and rolled it out through dual-write, shadow validation, cutover and legacy decommission.</p>
+          <p class="result">Adding a new market is now a configuration change, not new code.</p>
+          <div class="tags"><span>Java</span><span>Spark</span><span>BigQuery</span><span>Cassandra</span></div>
+        </div>
+      </article>
+      <article class="entry">
+        <div class="offset"><b>offset 0007</b>SDE III</div>
         <div>
           <h3>Async translation pipeline</h3>
-          <p>A rate-limited synchronous REST integration was holding a 1.28M-item catalog translation hostage to API latency. I rebuilt it as a Spring Boot producer-consumer service over mTLS Kafka, with 1,000-record batches, dead-letter retries and idempotent upserts so any message can be replayed safely.</p>
-          <p class="result">300× throughput over the per-record baseline; 1.28M items translated en-CA → fr-CA.</p>
+          <p>A rate-limited synchronous REST integration was holding catalog translation hostage to API latency. I replaced it with asynchronous Kafka messaging to Walmart's translation platform, built in Java 17 / Spring Boot as three independently runnable phases: BigQuery ingest, async Kafka produce, and consume with a <span class="mono">MERGE</span> back to BigQuery. Bulk record locking, batched reads, Secret Manager-backed mTLS, completion tracking and graceful shutdown make each phase safe to re-run.</p>
+          <p class="result">1.28M catalog items sent for English → French localization.</p>
           <div class="tags"><span>Java 17</span><span>Spring Boot</span><span>Kafka</span><span>BigQuery</span></div>
+        </div>
+      </article>
+      <article class="entry">
+        <div class="offset"><b>offset 0006</b>SDE III</div>
+        <div>
+          <h3>GraphQL serving with BatchLoaders</h3>
+          <p>The production path for AI-generated image alt text: Spark ingestion from BigQuery and Hive into Cassandra, served through federated GraphQL. DGS BatchLoader data providers replace one Cassandra read per record with concurrent, partition-local fan-out. When pods started OOMKilling, heap dumps showed genuine payload growth rather than a leak, so the fix was heap, container limits, probes and autoscaling, not a code hunt.</p>
+          <p class="result">N+1 Cassandra reads eliminated; 3.2M records live for Canada; restart loops ended as CPU ramped 120m → 2300m with traffic.</p>
+          <div class="tags"><span>Netflix DGS</span><span>GraphQL Federation</span><span>Cassandra</span><span>Kubernetes</span></div>
         </div>
       </article>
       <article class="entry">
         <div class="offset"><b>offset 0005</b>SDE III</div>
         <div>
-          <h3>GraphQL serving with BatchLoaders</h3>
-          <p>Interlink endpoints made one Cassandra read per record and blew the p99 SLO at peak. DGS BatchLoaders coalesce each request's lookups into batched, partition-local reads. When pods started OOMKilling, heap dumps showed payload growth rather than a leak, so the fix was heap, limits and autoscaling, not a code hunt.</p>
-          <p class="result">p99 within SLO at 2× peak QPS, across five page types.</p>
-          <div class="tags"><span>Netflix DGS</span><span>GraphQL Federation</span><span>Cassandra</span><span>Kubernetes</span></div>
+          <h3>200M-record Cassandra publisher</h3>
+          <p>A Spark/Scala publisher on Dataproc, scaling to 50 executors, that lands ML-generated internal-link recommendations in production Cassandra. A write bottleneck turned out to be client-side overhead, not cluster capacity: prepared-statement reuse, batch tuning and bounded in-flight writes raised sustained throughput while protecting read latency.</p>
+          <p class="result">200M+ records per run; interlinking live on Canada topic and brand pages.</p>
+          <div class="tags"><span>Scala</span><span>Spark 3.4</span><span>Cassandra</span><span>Dataproc</span></div>
         </div>
       </article>
       <article class="entry">
         <div class="offset"><b>offset 0004</b>SDE III</div>
         <div>
-          <h3>200M-record interlinking publisher</h3>
-          <p>A Spark/Scala publisher that lands ML-generated internal-link recommendations in production Cassandra across three schemas. The product tier is processed file by file with bounded in-flight writes, so the job never holds the full set in memory.</p>
-          <p class="result">200M+ records per run with no OOMs; interlinking live on browse, category, product, topic and brand pages.</p>
-          <div class="tags"><span>Scala</span><span>Spark 3.4</span><span>Cassandra</span><span>GCS</span></div>
+          <h3>Finding the missing topic pages</h3>
+          <p>Topic-page output collapsed in a 4.1M-record Spark pipeline. I instrumented a seven-stage validation funnel with per-stage retention logging, which traced the loss to over-strict assortment and page-rank filters.</p>
+          <p class="result">Output restored to 199,917 publishable pages; a follow-up eligibility analysis grew eligible keywords from 221,618 to 435,846.</p>
+          <div class="tags"><span>Spark</span><span>Data validation</span><span>Observability</span></div>
         </div>
       </article>
       <article class="entry">
         <div class="offset"><b>offset 0003</b>SDE III</div>
         <div>
-          <h3>Keyword datalake on Dataproc</h3>
-          <p>A seven-step Spark pipeline that turns search keyword signals into SEO topic pages: NLP enrichment, eight configurable validators, ML deduplication and a Cassandra publish, on 50+ autoscaling executors.</p>
-          <p class="result">500K keywords a week distilled to 35K production pages; batch time cut 60% after a model migration.</p>
-          <div class="tags"><span>Scala</span><span>Spark</span><span>Dataproc</span><span>CoreNLP</span></div>
+          <h3>Multi-tenant Cassandra schema</h3>
+          <p>A composite partition key of <span class="mono">(key, locale, tenant_id)</span> makes every tenant or locale read a single-partition lookup, with no secondary indexes or scatter-gather. LCS compaction is tuned for the read-heavy workload, with Dynatrace metrics on the repository layer.</p>
+          <p class="result">One table serves every tenant and locale; ~2TB reclaimed by auditing and dropping unused backup tables.</p>
+          <div class="tags"><span>Cassandra</span><span>LCS compaction</span><span>Dynatrace</span></div>
         </div>
       </article>
       <article class="entry">
-        <div class="offset"><b>offset 0002</b>SDE I–III</div>
+        <div class="offset"><b>offset 0002</b>SDE III</div>
         <div>
-          <h3>Multi-tenant Cassandra write path</h3>
-          <p>A composite partition key of <span class="mono">(key, locale, tenant_id)</span> serves any tenant or locale slice from one table without secondary indexes. A write bottleneck on the 10M-a-day path turned out to be client-side, fixed with prepared-statement reuse, batch tuning and pool settings.</p>
-          <p class="result">45% more write throughput, data-loss incidents gone, ~2TB of storage reclaimed.</p>
-          <div class="tags"><span>Cassandra 4</span><span>LCS compaction</span><span>Dynatrace</span></div>
+          <h3>Zero-downtime JDK 17 migration</h3>
+          <p>Seven production services moved off JDK 8 to clear security findings, sequenced by blast radius with rolling deploys. The same work closed command-injection, SQL-injection, log-injection and unsafe-deserialization paths.</p>
+          <p class="result">Seven services migrated in eight merged PRs with zero downtime.</p>
+          <div class="tags"><span>Java 17</span><span>Security</span><span>Rolling deploys</span></div>
         </div>
       </article>
       <article class="entry">
         <div class="offset"><b>offset 0001</b>SDE I–II</div>
         <div>
-          <h3>Zero-downtime JDK 17 migration</h3>
-          <p>Seven production services moved off JDK 8, sequenced by blast radius, each through canary bake and rolling deploys with automated rollback. Paired with CI/CD gating and expand-and-contract schema changes so every release could be undone.</p>
-          <p class="result">Seven services migrated with no downtime and no incidents.</p>
-          <div class="tags"><span>Java</span><span>CI/CD</span><span>Canary releases</span></div>
+          <h3>Advertising data platform</h3>
+          <p>Built and productionized the DSP and EA advertising Airflow pipelines: dynamic DAG generation, dynamic Dataproc cluster sizing, execution timeouts and change-managed releases. Refactored the Spark audience-segmentation service that feeds the DSP, adding retries, SFTP delivery, metadata integration, job metrics and Prometheus alerts.</p>
+          <p class="result">62 PRs on the Airflow platform and 32 on audience segmentation.</p>
+          <div class="tags"><span>Airflow</span><span>Python</span><span>Spark</span><span>Dataproc</span></div>
         </div>
       </article>
     </div>
@@ -277,12 +304,12 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
       <div class="stop now">
         <h3>Software Engineer III · Walmart Global Tech</h3>
         <div class="when">Aug 2024 – present</div>
-        <p>Owns event-driven pipelines, Spark batch engines and GraphQL serving for an international SEO platform. Ships LLM-generated content to production and debugs what breaks at scale.</p>
+        <p>Owns event-driven pipelines, Spark batch engines and GraphQL serving for an international SEO platform. Ships AI-generated content to production and debugs what breaks at scale. Bravo Award, Q2 2025.</p>
       </div>
       <div class="stop">
         <h3>Software Engineer I & II · Walmart Global Tech</h3>
         <div class="when">Jan 2022 – Jul 2024</div>
-        <p>Built the Cassandra publishing layer, led the JDK 17 migration and set up rollback-safe CI/CD pipelines.</p>
+        <p>Built the DSP and EA advertising Airflow pipelines and the Spark audience-segmentation service; integrated ASDA item, order and marketing aggregations in Scala/Spark; set up GCP infrastructure as code.</p>
       </div>
       <div class="stop">
         <h3>B.Tech, Information Technology · IIIT Lucknow</h3>
@@ -297,11 +324,11 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
     <h2>Tools used in production</h2>
     <div class="stack">
       <div><h3 class="label">Languages</h3><p>Java, Scala, Python, SQL</p></div>
-      <div><h3 class="label">Streaming & batch</h3><p>Kafka, Spark, GCP Dataproc, BigQuery, Trino</p></div>
-      <div><h3 class="label">Storage</h3><p>Cassandra, BigQuery, Azure Cosmos DB</p></div>
+      <div><h3 class="label">Streaming & batch</h3><p>Kafka, Spark, Airflow, GCP Dataproc, BigQuery</p></div>
+      <div><h3 class="label">Storage</h3><p>Cassandra, BigQuery, Hive, PostgreSQL, Azure Cosmos DB</p></div>
       <div><h3 class="label">Services & APIs</h3><p>Spring Boot, GraphQL (DGS, Federation), REST</p></div>
-      <div><h3 class="label">Platform</h3><p>Kubernetes, Istio, Docker, CI/CD</p></div>
-      <div><h3 class="label">Observability & AI</h3><p>Prometheus, Grafana, Dynatrace, OpenObserve; Claude, GPT-4o, Gemini in production pipelines</p></div>
+      <div><h3 class="label">Platform</h3><p>Kubernetes, Istio, SPIFFE Workload Identity, Terraform, Looper, Concord</p></div>
+      <div><h3 class="label">Observability & AI</h3><p>Prometheus, Dynatrace; AI-generated content delivery, LLM cost evaluation</p></div>
     </div>
   </section>
 

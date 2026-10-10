@@ -2,31 +2,29 @@
 
 🌐 **Portfolio website:** [https://nightcodeowl.github.io/NightCodeOwl/](https://nightcodeowl.github.io/NightCodeOwl/)
 
-**Role:** Senior Software Engineer (SDE III) at Walmart Global Tech building end-to-end distributed systems for Walmart Canada's SEO platform
+**Role:** Software Engineer III (SDE III) at Walmart Global Tech, building backend and data systems for Walmart's international SEO platform
 
-**What I build:** Spark/Scala batch pipelines on GCP Dataproc, GraphQL serving layers with DGS BatchLoader, Kafka-based event-driven microservices, multi-tenant Cassandra schemas, and source-agnostic ETL with Strategy-pattern abstraction.
+**What I build:** Event-driven Spring Boot + Kafka services, GraphQL serving layers with DGS BatchLoader, multi-tenant Cassandra schemas, and Spark/Scala batch pipelines on GCP Dataproc.
 
 **Key Accomplishments:**
-- Owns 4 production systems serving **1M+ daily SEO users** — keyword datalake, topic-page automation, GenAI alt-text platform, ML-driven interlinking
-- Architected 7-step Spark/Scala **Keyword Datalake** on GCP Dataproc with 50+ executors — 500K weekly keywords → 35K SEO topic pages
-- Built **Spring Boot 3.2 + Kafka (TAAS, mTLS) async translation service** — **300× throughput improvement** over per-record baseline; translated 1.28M items en-CA → fr-CA
-- Authored **GraphQL DGS BatchLoader pattern** coalescing N per-topic Cassandra reads into one batched read per request; p99 latency under SLO at 2× peak QPS
-- Built **200M+ record Cassandra publisher** for ML-generated interlinks across 5 page types and 3 schemas
-- Designed **multi-tenant composite partition keys** serving any-tenant/any-locale slice without secondary indexes
-- Maintains **10M+ daily transactions** in production
-- Recipient of **Q2 2025 Bravo Award** for automation innovation
+- Replaced a rate-limited synchronous REST integration with an **async Kafka translation service** (Java 17 / Spring Boot): 1.28M catalog items sent for English → French localization
+- Migrated a production Kafka service from certificate-based mTLS to **SPIFFE Workload Identity with zero downtime**, in reversible phases
+- Sole owner of the epic **unifying the CA/MX/US alt-text pipelines** into one config-driven Spark job, rolled out via dual-write, shadow validation and cutover
+- Built **GraphQL DGS BatchLoader** serving over Cassandra that eliminates N+1 reads; 3.2M AI-generated alt-text records live for Canada
+- Built a **200M+ record Cassandra publisher** on Dataproc (50 executors); traced its write bottleneck to client-side overhead, not cluster capacity
+- Diagnosed a topic-page collapse in a 4.1M-record pipeline with a 7-stage validation funnel, **restoring 199,917 publishable pages**
+- Led the **JDK 8 → 17 migration of 7 services with zero downtime** (8 merged PRs), closing injection and unsafe-deserialization paths
+- Earlier: built the DSP/EA advertising **Airflow** platform (62 PRs) and the Spark audience-segmentation service (32 PRs)
+- Recipient of the **Q2 2025 Bravo Award** for automation innovation
 
 **Technical Expertise:**
-- **Languages:** Java 17, Scala 2.12, Python, SQL, Bash
-- **Backend & Distributed Systems:** Spring Boot 3.2, Apache Kafka (TAAS, mTLS), Apache Spark, GraphQL (DGS DataFetcher / BatchLoader), REST APIs, Microservices, Event-Driven Architecture, Producer-Consumer Patterns
-- **Data Systems:** Apache Cassandra (composite-key schema design, LCS compaction), Google BigQuery (cross-project DML), Hive, PostgreSQL, Azure Cosmos DB
-- **Cloud & Infrastructure:** GCP (Dataproc workflow templates, GCS, BigQuery, Secret Manager), Azure (DF Cassandra), Docker, Kubernetes/WCNP, CI/CD (Looper, Concord, Jenkins, GitHub Actions)
-- **AI/ML:** LLM productionization (Claude, GPT-4o, Gemini, Walmart-internal), BERT, Stanford CoreNLP, OpenNLP, LangChain; LLM cost modeling at 1M+ scale
+- **Languages:** Java 17, Scala, Python, SQL
+- **Backend & Distributed Systems:** Spring Boot, Apache Kafka, GraphQL (DGS DataFetcher / BatchLoader / Federation), REST, Microservices, Event-Driven Architecture
+- **Data Systems:** Apache Cassandra (composite-key schema design, LCS compaction), BigQuery, Hive, PostgreSQL, Azure Cosmos DB, Apache Spark, Apache Airflow
+- **Cloud & Platform:** GCP (Dataproc, GCS, BigQuery, IAM, VPC Service Controls, Secret Manager), Kubernetes, Istio, SPIFFE Workload Identity, Terraform, Looper, Concord
+- **Observability:** Prometheus, Dynatrace
 
-**Notable Strengths:**
-End-to-end ownership across batch pipelines, event-driven microservices, GraphQL serving layers, and multi-tenant data stores. Deep with distributed systems patterns: composite partition keys, BatchLoader coalescing, Strategy-pattern source abstraction, cross-project BigQuery DML workarounds, and Kafka producer-consumer integration. Production code at Walmart Global Tech remains in private repositories — see [PORTFOLIO_README.md](./PORTFOLIO_README.md) for sanitized, generic implementations of the patterns I build.
-
-**Competitive Programming:** 500+ LeetCode problems solved, focusing on dynamic programming and graph algorithms
+Production code at Walmart Global Tech stays in private repositories. See [PORTFOLIO_README.md](./PORTFOLIO_README.md) for design-level write-ups of these systems.
 
 **🌐 Portfolio:** [https://nightcodeowl.github.io/NightCodeOwl/](https://nightcodeowl.github.io/NightCodeOwl/)
 
