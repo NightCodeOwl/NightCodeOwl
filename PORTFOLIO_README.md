@@ -388,7 +388,7 @@ SDE I & II (Jan 2022 – Jul 2024) → SDE III (Aug 2024 – Present) · Interna
 ## Contact
 
 - 💼 [LinkedIn](https://www.linkedin.com/in/deepanshuu-maheshwari/)
-- 📧 [deepanshumaheshwarri99@gmail.com](mailto:deepanshumaheshwarri99@gmail.com)
+- 📧 [deepanshuumaheshwari@gmail.com](mailto:deepanshuumaheshwari@gmail.com)
 - 🐙 [GitHub](https://github.com/NightCodeOwl)
 
 ---
