@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Deepanshu Maheshwari, SDE III at Walmart Global Tech. Backend and data engineer: Kafka, Spark, Cassandra, GraphQL.">
+<style>html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Deepanshu Maheshwari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a live event stream (producer → partitions → consumer) opens the page;
+   below it, systems read like committed log entries with offsets. Dark-first "night shift". */
+:root {
+  --bg: #0d1220;          /* night ink */
+  --surface: #141b2e;
+  --line: #26304a;
+  --fg: #e6e9f2;
+  --muted: #8f99b3;
+  --accent: #f2b544;      /* sodium-lamp amber, the owl's eye */
+  --accent-2: #7fb3ff;    /* consumer blue */
+  --ok: #5fd39a;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef1f6; --surface: #ffffff; --line: #d3d9e6; --fg: #121829; --muted: #556079;
+    --accent: #b97700; --accent-2: #2f63c9; --ok: #1d8a57; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eef1f6; --surface: #ffffff; --line: #d3d9e6; --fg: #121829; --muted: #556079;
+  --accent: #b97700; --accent-2: #2f63c9; --ok: #1d8a57; color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 400 1rem/1.6 var(--body);
+  padding-inline: 20px; padding-block: 0 56px;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+.wrap { max-width: 1080px; margin-inline: auto; }
+.mono { font-family: var(--mono); }
+.label {
+  font: 500 0.72rem/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+/* Nav */
+nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  margin-inline: -20px; padding: 12px 20px;
+}
+nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.handle { font: 600 0.9rem var(--mono); display: flex; align-items: center; gap: 10px; }
+.eye { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: blink 6s infinite; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+nav ul { list-style: none; display: flex; gap: 18px; margin: 0; padding: 0; flex-wrap: wrap; }
+nav ul a { font: 500 0.85rem var(--body); color: var(--muted); text-decoration: none; }
+nav ul a:hover, nav ul a:focus-visible { color: var(--fg); }
+
+/* Hero */
+.hero { padding-block: 56px 24px; display: grid; gap: 28px; }
+.hero .label .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); margin-right: 8px; vertical-align: 1px; animation: pulse 2s infinite; }
+@keyframes pulse { 50% { opacity: 0.3; } }
+h1 {
+  font: 800 clamp(2.6rem, 7.5vw, 5.4rem)/0.95 var(--display);
+  letter-spacing: -0.035em; margin: 0; text-wrap: balance;
+}
+h1 .soft { color: var(--muted); font-weight: 400; }
+.thesis { font-size: clamp(1.05rem, 1.8vw, 1.25rem); max-width: 60ch; color: var(--muted); margin: 0; }
+.thesis b { color: var(--fg); font-weight: 600; }
+
+.stream {
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+  overflow: hidden;
+}
+.stream-head, .stream-foot {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px; font: 400 0.78rem var(--mono); color: var(--muted);
+}
+.stream-head { border-bottom: 1px solid var(--line); }
+.stream-foot { border-top: 1px solid var(--line); }
+.stream-foot b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+canvas { display: block; width: 100%; height: 190px; }
+
+/* Metrics */
+.metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  margin-block: 40px;
+}
+.metric { padding: 20px 16px 18px 0; display: grid; gap: 4px; }
+.metric strong { font: 600 clamp(1.7rem, 3.4vw, 2.3rem)/1 var(--display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--accent); }
+.metric span { font-size: 0.86rem; color: var(--muted); line-height: 1.35; }
+
+/* Sections */
+section { padding-block: 40px; }
+h2 { font: 700 clamp(1.6rem, 3.2vw, 2.2rem)/1.1 var(--display); letter-spacing: -0.02em; margin: 6px 0 24px; text-wrap: balance; }
+
+/* Log entries */
+.log { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.entry {
+  display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 20px;
+  padding-block: 26px; border-bottom: 1px solid var(--line);
+}
+.offset { font: 400 0.78rem/1.5 var(--mono); color: var(--muted); padding-top: 6px; }
+.offset b { display: block; color: var(--accent); font-weight: 500; }
+.entry h3 { font: 600 1.3rem/1.25 var(--display); margin: 0 0 8px; letter-spacing: -0.01em; }
+.entry p { margin: 0 0 12px; max-width: 68ch; color: var(--muted); }
+.entry .result { color: var(--fg); }
+.entry .result::before { content: "→ "; color: var(--ok); font-family: var(--mono); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.tags span { font: 400 0.74rem var(--mono); padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+.entry { transition: background 0.25s; }
+.entry:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+
+/* Timeline */
+.timeline { display: grid; gap: 0; position: relative; padding-left: 26px; }
+.timeline::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
+.stop { position: relative; padding-bottom: 28px; }
+.stop::before { content: ""; position: absolute; left: -26px; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent-2); }
+.stop.now::before { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent); }
+.stop h3 { font: 600 1.12rem var(--display); margin: 0; }
+.stop .when { font: 400 0.8rem var(--mono); color: var(--muted); }
+.stop p { margin: 6px 0 0; color: var(--muted); max-width: 64ch; }
+
+/* Stack */
+.stack { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 28px 32px; }
+.stack h3 { margin: 0 0 8px; }
+.stack p { margin: 0; color: var(--fg); }
+
+/* Contact */
+.contact { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: clamp(22px, 4vw, 40px); display: grid; gap: 18px; }
+.contact h2 { margin: 0; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn {
+  font: 500 0.9rem var(--body); text-decoration: none; cursor: pointer;
+  padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--fg);
+  transition: border-color 0.2s, transform 0.2s;
+}
+.btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #141008; }
+.email { font: 400 0.9rem var(--mono); color: var(--muted); user-select: all; overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
+footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
+
+/* Load-in: elements are visible at rest; motion only adds a lift */
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise 0.7s cubic-bezier(.2,.7,.2,1) both; }
+  .r2 { animation-delay: .08s; } .r3 { animation-delay: .16s; } .r4 { animation-delay: .24s; }
+  @keyframes rise { from { transform: translateY(14px); } to { transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) { .eye, .hero .label .dot { animation: none; } }
+
+@media (max-width: 640px) {
+  .entry { grid-template-columns: 1fr; gap: 6px; }
+  .offset { padding-top: 0; display: flex; gap: 10px; }
+  .offset b { display: inline; }
+  canvas { height: 150px; }
+  nav ul { gap: 14px; }
+}
+</style>
+</head>
+<body>
+
+<nav aria-label="Sections">
+  <div class="wrap">
+    <span class="handle"><span class="eye" aria-hidden="true"></span>NightCodeOwl</span>
+    <ul>
+      <li><a href="#systems">Systems</a></li>
+      <li><a href="#career">Career</a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="label rise"><span class="dot" aria-hidden="true"></span>SDE III · Walmart Global Tech · Bengaluru</div>
+    <h1 class="rise r2">Deepanshu Maheshwari<br><span class="soft">builds the pipes data runs through.</span></h1>
+    <p class="thesis rise r3">Backend and data engineer working on distributed systems at scale: <b>Kafka pipelines</b>, <b>Spark batch engines</b>, <b>Cassandra stores</b> and <b>GraphQL APIs</b> that serve AI-generated content to over a million people a day.</p>
+
+    <div class="stream rise r4" aria-label="Animated illustration of messages flowing from a producer through four Kafka partitions to a consumer">
+      <div class="stream-head"><span>topic: catalog-translations</span><span>4 partitions · idempotent consumer</span></div>
+      <canvas id="flow"></canvas>
+      <div class="stream-foot">
+        <span>committed offset <b id="offset">0</b></span>
+        <span>replays deduplicated <b id="dupes">0</b></span>
+        <span>consumer lag <b id="lag">0</b></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="metrics" role="list">
+    <div class="metric" role="listitem"><strong>1M+</strong><span>daily users served AI-generated content</span></div>
+    <div class="metric" role="listitem"><strong>300×</strong><span>throughput after moving REST to Kafka</span></div>
+    <div class="metric" role="listitem"><strong>200M+</strong><span>records per Cassandra publish run</span></div>
+    <div class="metric" role="listitem"><strong>10M+</strong><span>daily transactions on the write path</span></div>
+    <div class="metric" role="listitem"><strong>7</strong><span>services moved JDK 8 → 17, zero downtime</span></div>
+  </div>
+
+  <section id="systems">
+    <div class="label">Systems log</div>
+    <h2>Selected systems, newest first</h2>
+    <div class="log">
+      <article class="entry">
+        <div class="offset"><b>offset 0006</b>SDE III</div>
+        <div>
+          <h3>Async translation pipeline</h3>
+          <p>A rate-limited synchronous REST integration was holding a 1.28M-item catalog translation hostage to API latency. I rebuilt it as a Spring Boot producer-consumer service over mTLS Kafka, with 1,000-record batches, dead-letter retries and idempotent upserts so any message can be replayed safely.</p>
+          <p class="result">300× throughput over the per-record baseline; 1.28M items translated en-CA → fr-CA.</p>
+          <div class="tags"><span>Java 17</span><span>Spring Boot</span><span>Kafka</span><span>BigQuery</span></div>
+        </div>
+      </article>
+      <article class="entry">
+        <div class="offset"><b>offset 0005</b>SDE III</div>
+        <div>
+          <h3>GraphQL serving with BatchLoaders</h3>
+          <p>Interlink endpoints made one Cassandra read per record and blew the p99 SLO at peak. DGS BatchLoaders coalesce each request's lookups into batched, partition-local reads. When pods started OOMKilling, heap dumps showed payload growth rather than a leak, so the fix was heap, limits and autoscaling, not a code hunt.</p>
+          <p class="result">p99 within SLO at 2× peak QPS, across five page types.</p>
+          <div class="tags"><span>Netflix DGS</span><span>GraphQL Federation</span><span>Cassandra</span><span>Kubernetes</span></div>
+        </div>
+      </article>
+      <article class="entry">
+        <div class="offset"><b>offset 0004</b>SDE III</div>
+        <div>
+          <h3>200M-record interlinking publisher</h3>
+          <p>A Spark/Scala publisher that lands ML-generated internal-link recommendations in production Cassandra across three schemas. The product tier is processed file by file with bounded in-flight writes, so the job never holds the full set in memory.</p>
+          <p class="result">200M+ records per run with no OOMs; interlinking live on browse, category, product, topic and brand pages.</p>
+          <div class="tags"><span>Scala</span><span>Spark 3.4</span><span>Cassandra</span><span>GCS</span></div>
+        </div>
+      </article>
+      <article class="entry">
+        <div class="offset"><b>offset 0003</b>SDE III</div>
+        <div>
+          <h3>Keyword datalake on Dataproc</h3>
+          <p>A seven-step Spark pipeline that turns search keyword signals into SEO topic pages: NLP enrichment, eight configurable validators, ML deduplication and a Cassandra publish, on 50+ autoscaling executors.</p>
+          <p class="result">500K keywords a week distilled to 35K production pages; batch time cut 60% after a model migration.</p>
+          <div class="tags"><span>Scala</span><span>Spark</span><span>Dataproc</span><span>CoreNLP</span></div>
+        </div>
+      </article>
+      <article class="entry">
+        <div class="offset"><b>offset 0002</b>SDE I–III</div>
+        <div>
+          <h3>Multi-tenant Cassandra write path</h3>
+          <p>A composite partition key of <span class="mono">(key, locale, tenant_id)</span> serves any tenant or locale slice from one table without secondary indexes. A write bottleneck on the 10M-a-day path turned out to be client-side, fixed with prepared-statement reuse, batch tuning and pool settings.</p>
+          <p class="result">45% more write throughput, data-loss incidents gone, ~2TB of storage reclaimed.</p>
+          <div class="tags"><span>Cassandra 4</span><span>LCS compaction</span><span>Dynatrace</span></div>
+        </div>
+      </article>
+      <article class="entry">
+        <div class="offset"><b>offset 0001</b>SDE I–II</div>
+        <div>
+          <h3>Zero-downtime JDK 17 migration</h3>
+          <p>Seven production services moved off JDK 8, sequenced by blast radius, each through canary bake and rolling deploys with automated rollback. Paired with CI/CD gating and expand-and-contract schema changes so every release could be undone.</p>
+          <p class="result">Seven services migrated with no downtime and no incidents.</p>
+          <div class="tags"><span>Java</span><span>CI/CD</span><span>Canary releases</span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="career">
+    <div class="label">Career</div>
+    <h2>Four years on one platform, three levels</h2>
+    <div class="timeline">
+      <div class="stop now">
+        <h3>Software Engineer III · Walmart Global Tech</h3>
+        <div class="when">Aug 2024 – present</div>
+        <p>Owns event-driven pipelines, Spark batch engines and GraphQL serving for an international SEO platform. Ships LLM-generated content to production and debugs what breaks at scale.</p>
+      </div>
+      <div class="stop">
+        <h3>Software Engineer I & II · Walmart Global Tech</h3>
+        <div class="when">Jan 2022 – Jul 2024</div>
+        <p>Built the Cassandra publishing layer, led the JDK 17 migration and set up rollback-safe CI/CD pipelines.</p>
+      </div>
+      <div class="stop">
+        <h3>B.Tech, Information Technology · IIIT Lucknow</h3>
+        <div class="when">2018 – 2022 · GPA 8.0/10</div>
+        <p>Distributed systems, databases, data structures and machine learning.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="stack">
+    <div class="label">Stack</div>
+    <h2>Tools used in production</h2>
+    <div class="stack">
+      <div><h3 class="label">Languages</h3><p>Java, Scala, Python, SQL</p></div>
+      <div><h3 class="label">Streaming & batch</h3><p>Kafka, Spark, GCP Dataproc, BigQuery, Trino</p></div>
+      <div><h3 class="label">Storage</h3><p>Cassandra, BigQuery, Azure Cosmos DB</p></div>
+      <div><h3 class="label">Services & APIs</h3><p>Spring Boot, GraphQL (DGS, Federation), REST</p></div>
+      <div><h3 class="label">Platform</h3><p>Kubernetes, Istio, Docker, CI/CD</p></div>
+      <div><h3 class="label">Observability & AI</h3><p>Prometheus, Grafana, Dynatrace, OpenObserve; Claude, GPT-4o, Gemini in production pipelines</p></div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="contact">
+      <div class="label">Contact</div>
+      <h2>Open to backend and data engineering roles.</h2>
+      <div class="links">
+        <a class="btn primary" href="https://www.linkedin.com/in/deepanshuu-maheshwari/" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="btn" href="https://github.com/NightCodeOwl" target="_blank" rel="noopener">GitHub</a>
+        <button class="btn" id="copy" type="button">Copy email</button>
+        <span class="email" id="email">deepanshumaheshwarri99@gmail.com</span>
+      </div>
+    </div>
+    <footer>Built with care at night. Production code stays in private employer repositories; this page describes the designs.</footer>
+  </section>
+</main>
+
+<script>
+(() => {
+  // Copy email
+  const btn = document.getElementById('copy'), email = document.getElementById('email');
+  btn.addEventListener('click', () => {
+    const t = email.textContent.trim();
+    const done = () => { btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy email', 1600); };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents(email); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected, press Ctrl+C'; };
+    try { navigator.clipboard.writeText(t).then(done, fallback); } catch (e) { fallback(); }
+  });
+
+  // Event stream animation
+  const cv = document.getElementById('flow'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const P = 4; let W = 0, H = 0, dpr = 1, colors = {};
+  const readColors = () => {
+    const s = getComputedStyle(document.documentElement);
+    ['--accent','--accent-2','--line','--muted','--fg','--ok','--surface'].forEach(k => colors[k] = s.getPropertyValue(k).trim());
+  };
+  const size = () => {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  readColors(); size();
+  addEventListener('resize', size);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+  new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  let msgs = [], offset = 1279400, dupes = 0, t0 = performance.now(), spawnAcc = 0;
+  const elOff = document.getElementById('offset'), elDup = document.getElementById('dupes'), elLag = document.getElementById('lag');
+  const geom = () => {
+    const narrow = W < 520;
+    const left = narrow ? 64 : 104, right = narrow ? 70 : 112;
+    const top = 26, laneH = (H - top * 2) / P;
+    return { left, right, top, laneH, x0: left, x1: W - right };
+  };
+  const spawn = () => {
+    const p = Math.floor(Math.random() * P);
+    const replay = Math.random() < 0.07;
+    msgs.push({ p, x: 0, v: 0.18 + Math.random() * 0.12, replay, born: performance.now() });
+  };
+  for (let i = 0; i < 14; i++) { spawn(); msgs[i].x = Math.random(); }
+
+  const draw = (now) => {
+    const dt = Math.min(now - t0, 50); t0 = now;
+    const g = geom();
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = '11px "JetBrains Mono", monospace'; ctx.textBaseline = 'middle';
+
+    // producer & consumer blocks
+    const mid = H / 2;
+    ctx.fillStyle = colors['--accent']; ctx.globalAlpha = 0.15;
+    ctx.fillRect(8, g.top, g.left - 30, H - g.top * 2);
+    ctx.fillStyle = colors['--accent-2'];
+    ctx.fillRect(g.x1 + 22, g.top, W - g.x1 - 30, H - g.top * 2);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = colors['--muted'];
+    ctx.textAlign = 'center';
+    ctx.fillText('producer', 8 + (g.left - 30) / 2, mid);
+    ctx.fillText('consumer', g.x1 + 22 + (W - g.x1 - 30) / 2, mid);
+
+    // lanes
+    for (let i = 0; i < P; i++) {
+      const y = g.top + g.laneH * (i + 0.5);
+      ctx.strokeStyle = colors['--line']; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(g.x0, y); ctx.lineTo(g.x1, y); ctx.stroke();
+      ctx.fillStyle = colors['--muted']; ctx.textAlign = 'left';
+      if (W >= 420) ctx.fillText('p' + i, g.x0 + 2, y - 10);
+    }
+
+    // messages
+    if (!reduce) {
+      spawnAcc += dt;
+      while (spawnAcc > 210) { spawn(); spawnAcc -= 210; }
+    }
+    const span = g.x1 - g.x0;
+    msgs = msgs.filter(m => {
+      if (!reduce) m.x += m.v * dt / 1000;
+      if (m.x >= 1) { if (m.replay) dupes++; else offset++; return false; }
+      const x = g.x0 + m.x * span, y = g.top + g.laneH * (m.p + 0.5);
+      ctx.fillStyle = m.replay ? colors['--muted'] : colors['--accent'];
+      const w = W < 520 ? 12 : 16, h = 8;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x - w / 2, y - h / 2, w, h, 3); else ctx.rect(x - w / 2, y - h / 2, w, h);
+      ctx.fill();
+      if (m.replay) { ctx.strokeStyle = colors['--accent']; ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]); }
+      return true;
+    });
+
+    elOff.textContent = offset.toLocaleString('en-IN');
+    elDup.textContent = dupes.toLocaleString('en-IN');
+    elLag.textContent = msgs.length;
+    if (!reduce) requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
