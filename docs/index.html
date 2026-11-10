@@ -122,6 +122,15 @@ h2 { font: 700 clamp(1.6rem, 3.2vw, 2.2rem)/1.1 var(--display); letter-spacing: 
 .tags span { font: 400 0.74rem var(--mono); padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
 .entry { transition: background 0.25s; }
 .entry:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.more summary {
+  cursor: pointer; list-style: none; padding: 16px 0; font: 500 0.85rem var(--mono); color: var(--accent);
+  border-bottom: 1px solid var(--line);
+}
+.more summary::-webkit-details-marker { display: none; }
+.more summary::before { content: "+ "; }
+.more[open] summary::before { content: "− "; }
+.more[open] summary { border-bottom: 0; }
+.more .log { border-top: 0; }
 
 /* Timeline */
 .timeline { display: grid; gap: 0; position: relative; padding-left: 26px; }
@@ -194,9 +203,9 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
       <div class="stream-head"><span>topic: catalog-translations</span><span>4 partitions · idempotent consumer</span></div>
       <canvas id="flow"></canvas>
       <div class="stream-foot">
-        <span>committed offset <b id="offset">0</b></span>
+        <span>committed offset <b id="offset">12,79,400</b></span>
         <span>replays deduplicated <b id="dupes">0</b></span>
-        <span>consumer lag <b id="lag">0</b></span>
+        <span>consumer lag <b id="lag">14</b></span>
       </div>
     </div>
   </header>
@@ -244,8 +253,8 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
         <div class="offset"><b>offset 0006</b>SDE III</div>
         <div>
           <h3>GraphQL serving with BatchLoaders</h3>
-          <p>The production path for AI-generated image alt text: Spark ingestion from BigQuery and Hive into Cassandra, served through federated GraphQL. DGS BatchLoader data providers replace one Cassandra read per record with concurrent, partition-local fan-out. When pods started OOMKilling, heap dumps showed genuine payload growth rather than a leak, so the fix was heap, container limits, probes and autoscaling, not a code hunt.</p>
-          <p class="result">N+1 Cassandra reads eliminated; 3.2M records live for Canada; restart loops ended as CPU ramped 120m → 2300m with traffic.</p>
+          <p>The production path for AI-generated image alt text: Spark ingestion from BigQuery and Hive into Cassandra, served through federated GraphQL. DGS BatchLoader data providers replace one Cassandra read per record with concurrent, partition-local fan-out. When pods started OOMKilling, heap dumps showed genuine payload growth rather than a leak, so the fix was heap, container limits, probes and autoscaling, not a code hunt. Restart loops ended as CPU scaled from 120m to 2300m with traffic.</p>
+          <p class="result">N+1 Cassandra reads eliminated; 3.2M records live for Canada.</p>
           <div class="tags"><span>Netflix DGS</span><span>GraphQL Federation</span><span>Cassandra</span><span>Kubernetes</span></div>
         </div>
       </article>
@@ -267,6 +276,10 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
           <div class="tags"><span>Spark</span><span>Data validation</span><span>Observability</span></div>
         </div>
       </article>
+    </div>
+    <details class="more">
+      <summary>3 earlier systems</summary>
+      <div class="log">
       <article class="entry">
         <div class="offset"><b>offset 0003</b>SDE III</div>
         <div>
@@ -294,12 +307,13 @@ footer { margin-top: 40px; font: 400 0.78rem var(--mono); color: var(--muted); }
           <div class="tags"><span>Airflow</span><span>Python</span><span>Spark</span><span>Dataproc</span></div>
         </div>
       </article>
-    </div>
+      </div>
+    </details>
   </section>
 
   <section id="career">
     <div class="label">Career</div>
-    <h2>Four years on one platform, three levels</h2>
+    <h2>Four years at Walmart Global Tech, three levels</h2>
     <div class="timeline">
       <div class="stop now">
         <h3>Software Engineer III · Walmart Global Tech</h3>
